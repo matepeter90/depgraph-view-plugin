@@ -22,48 +22,45 @@
 
 package hudson.plugins.depgraph_view.model.graph;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
-import hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig;
-import hudson.plugins.parameterizedtrigger.TriggerBuilder;
+import hudson.plugins.copyartifact.CopyArtifact;
 import hudson.tasks.Builder;
 import jenkins.model.Jenkins;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static hudson.plugins.depgraph_view.model.graph.ProjectNode.node;
+import hudson.plugins.parameterizedtrigger.BlockableBuildTriggerConfig;
+import hudson.plugins.parameterizedtrigger.TriggerBuilder;
 import hudson.tasks.BuildStep;
 import hudson.tasks.Publisher;
+import java.util.ArrayList;
+import java.util.Arrays;
 import org.jenkins_ci.plugins.flexible_publish.ConditionalPublisher;
 import org.jenkins_ci.plugins.flexible_publish.FlexiblePublisher;
 
 /**
- * Provides subprojects given by the TriggerBuilder of the ParameterizedTriggerPlugin
+ * Provides {@link SubProjectEdge}s
  */
-public class ParameterizedTriggerSubProjectProvider implements SubProjectProvider {
+public class SubProjectEdgeProvider implements EdgeProvider {
 
-    private final boolean isParameterizedTriggerPluginInstalled;
     private final boolean isFlexiblePublishPluginInstalled;
 
     @Inject
-    public ParameterizedTriggerSubProjectProvider(Jenkins jenkins) {
-        isParameterizedTriggerPluginInstalled = jenkins.getPlugin("parameterized-trigger") != null;
+    public SubProjectEdgeProvider(Jenkins jenkins) {
         isFlexiblePublishPluginInstalled = jenkins.getPlugin("flexible-publish") != null;
     }
 
     @Override
-    public Iterable<ProjectNode> getSubProjectsOf(AbstractProject<?, ?> project) {
-        Preconditions.checkNotNull(project);
-        if (!isParameterizedTriggerPluginInstalled) {
-            return Collections.emptyList();
-        }
+    public Iterable<Edge> getEdgesIncidentWith(AbstractProject<?, ?> project) {
+        Set<Edge> subprojectEdges = Sets.newHashSet();
 
-        List<ProjectNode> subProjects = new ArrayList<ProjectNode>();
         if(project instanceof FreeStyleProject) {
+
             FreeStyleProject proj = (FreeStyleProject) project;
             List<Builder> builders;
             if(isFlexiblePublishPluginInstalled){
@@ -90,16 +87,26 @@ public class ParameterizedTriggerSubProjectProvider implements SubProjectProvide
             }
 
             for (Builder builder : builders) {
+
                 if (builder instanceof TriggerBuilder) {
+
                     TriggerBuilder tBuilder = (TriggerBuilder) builder;
-                    for (BlockableBuildTriggerConfig config : tBuilder.getConfigs()) {
-                        for (AbstractProject<?,?> abstractProject : config.getProjectList(null)) {
-                            subProjects.add(node(abstractProject) );
-                        }
+                    List<BlockableBuildTriggerConfig> configs =  tBuilder.getConfigs();
+                    for (BlockableBuildTriggerConfig config : configs){
+                       List<String> projects = Arrays.asList(config.getProjects().split(","));
+                       Jenkins jenkins = Jenkins.getInstance();
+                       for(String projectName : projects){
+                            AbstractProject<?,?> projectFromName = jenkins.getItem(projectName.trim(), project.getParent(), AbstractProject.class);
+
+                            if (projectFromName != null) {
+                                subprojectEdges.add(
+                                        new SubProjectEdge(node(project),node(projectFromName)));
+                            }
+                       }
                     }
                 }
             }
         }
-        return subProjects;
+        return subprojectEdges;
     }
 }

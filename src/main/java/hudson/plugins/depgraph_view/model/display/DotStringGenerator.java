@@ -129,9 +129,6 @@ public class DotStringGenerator extends AbstractDotStringGenerator {
                 .append(getEscapedProjectUrl(proj))
                 .append(" label=<<table border=\"0\" cellborder=\"0\" cellpadding=\"3\" bgcolor=\"white\">\n");
         builder.append(getProjectRow(proj));
-        for (ProjectNode subproject : subprojects) {
-            builder.append(getProjectRow(subproject, "bgcolor=" + escapeString(subProjectColor))).append("\n");
-        }
         builder.append("</table>>]");
         return builder.toString();
     }

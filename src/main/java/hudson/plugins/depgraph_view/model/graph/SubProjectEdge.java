@@ -22,22 +22,21 @@
 
 package hudson.plugins.depgraph_view.model.graph;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import hudson.Extension;
-
 /**
- * Guice Module for the DependencyGraph
+ * Represents an {@link Edge} given by the {@link hudson.plugins.copyartifact.CopyArtifact} Builder.
  */
-@Extension
-public class DependencyGraphModule extends AbstractModule {
+public class SubProjectEdge extends Edge {
+    public SubProjectEdge(ProjectNode source, ProjectNode target) {
+        super(source, target);
+    }
+
     @Override
-    protected void configure() {
-        Multibinder<EdgeProvider> edgeProviderMultibinder = Multibinder.newSetBinder(binder(), EdgeProvider.class);
-        edgeProviderMultibinder.addBinding().to(DependencyGraphEdgeProvider.class);
-        edgeProviderMultibinder.addBinding().to(CopyArtifactEdgeProvider.class);
-        edgeProviderMultibinder.addBinding().to(SubProjectEdgeProvider.class);
-        Multibinder<SubProjectProvider> subProjectProviderMultibinder = Multibinder.newSetBinder(binder(), SubProjectProvider.class);
-        subProjectProviderMultibinder.addBinding().to(ParameterizedTriggerSubProjectProvider.class);
+    public String getType() {
+        return "subproject";
+    }
+
+    @Override
+    public String getColor() {
+        return "black";
     }
 }
