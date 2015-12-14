@@ -59,7 +59,7 @@ public class DotStringGenerator extends AbstractDotStringGenerator {
         StringBuilder builder = new StringBuilder();
 
         builder.append("digraph {\n");
-        builder.append("node [shape=box, style=rounded];\n");
+        builder.append("node [shape=box, style=\"rounded, filled\"];\n");
 
         /**** First define all the objects and clusters ****/
 
@@ -93,7 +93,7 @@ public class DotStringGenerator extends AbstractDotStringGenerator {
     private String standaloneProjectNodes(List<String> standaloneNames) {
         StringBuilder builder = new StringBuilder();
         for (ProjectNode proj : standaloneProjects) {
-            builder.append(projectToNodeString(proj, subJobs.get(proj)));
+            builder.append(projectToNodeString(proj));
             builder.append(";\n");
         }
         if (!standaloneNames.isEmpty()) {
@@ -105,12 +105,7 @@ public class DotStringGenerator extends AbstractDotStringGenerator {
     private String projectsInDependenciesNodes() {
         StringBuilder stringBuilder = new StringBuilder();
         for (ProjectNode proj : projectsInDeps) {
-            if (subJobs.containsKey(proj)) {
-                stringBuilder.append(projectToNodeString(proj, subJobs.get(proj)));
-            }
-            else {
-                stringBuilder.append(projectToNodeString(proj));
-            }
+            stringBuilder.append(projectToNodeString(proj));
             stringBuilder.append(";\n");
         }
         return stringBuilder.toString();
@@ -119,23 +114,8 @@ public class DotStringGenerator extends AbstractDotStringGenerator {
     private String projectToNodeString(ProjectNode proj) {
         return escapeString(proj.getName()) +
                 " [href=" +
-                getEscapedProjectUrl(proj) + "]";
-    }
-
-    private String projectToNodeString(ProjectNode proj, List<ProjectNode> subprojects) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(escapeString(proj.getName()))
-                .append(" [shape=\"Mrecord\" href=")
-                .append(getEscapedProjectUrl(proj))
-                .append(" label=<<table border=\"0\" cellborder=\"0\" cellpadding=\"3\" bgcolor=\"white\">\n");
-        builder.append(getProjectRow(proj));
-        builder.append("</table>>]");
-        return builder.toString();
-    }
-
-    private String getProjectRow(ProjectNode project, String... extraColumnProperties) {
-        return String.format("<tr><td align=\"center\" href=%s %s>%s</td></tr>", getEscapedProjectUrl(project), Joiner.on(" ").join(extraColumnProperties),
-                project.getName());
+                getEscapedProjectUrl(proj) +
+                " fillcolor=\"" + proj.getColor() + "\"]";
     }
 
     private String getEscapedProjectUrl(ProjectNode proj) {

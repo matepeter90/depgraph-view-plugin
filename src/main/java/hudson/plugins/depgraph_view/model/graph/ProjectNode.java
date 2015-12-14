@@ -24,6 +24,7 @@ package hudson.plugins.depgraph_view.model.graph;
 
 import com.google.common.base.Preconditions;
 import hudson.model.AbstractProject;
+import hudson.triggers.SCMTrigger;
 
 /**
  * A Node in the DependencyGraph, which corresponds to a Project
@@ -42,6 +43,14 @@ public class ProjectNode {
 
     public String getName() {
         return project.getFullDisplayName();
+    }
+
+    public boolean isPollingSCM() {
+        return project.getTrigger(SCMTrigger.class) != null;
+    }
+
+    public String getColor() {
+        return (isPollingSCM()) ? "lightblue" : "white";
     }
 
     public AbstractProject<?, ?> getProject() {
